@@ -1,0 +1,56 @@
+services:
+  sentry:
+    image: sentry:9.1.2
+    ports:
+      - 9000:9000
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+    env_file:
+      - .env
+
+  sentry-cron:
+    image: sentry:9.1.2
+    command: sentry run cron
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+    env_file:
+      - .env
+
+  sentry-worker:
+    image: sentry:9.1.2
+    command: sentry run worker
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -d ${SENTRY_DB_NAME} -U ${SENTRY_DB_USER}
+    environment:
+     POSTGRES_USER: ${SENTRY_DB_USER}
+     POSTGRES_PASSWORD: ${SENTRY_DB_PASSWORD}
+
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: redis-cli ping
+
+  rabbitmq:
+    image: rabbitmq:4.0-alpine
+    volumes:
+      - ./data/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
