@@ -41,7 +41,7 @@ services:
      POSTGRES_PASSWORD: ${SENTRY_DB_PASSWORD}
 
   redis:
-    image: redis:7.4-alpine
+    image: redis:5-alpine
     command: redis-server --appendonly yes
     volumes:
       - ./data/redis:/data
